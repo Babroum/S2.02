@@ -1,36 +1,72 @@
+DIRECTIONS = [(1, 0), (0, 1), (1, 1), (1, -1)]  # H, B, ↗, ↘
 class App1_def :
 
     def __init__ (self):
-        self.board = {}   # {(x, y): 1 ou 2}
+        self.board = []   # liste de [(x, y, joueur...)]
         self.current_player = 1
 
     def vide (self, x , y):
-        return(x, y) not in self.board    
+        """vérification de si les coordonnés sont prise ou non
+        """
+        for mx, my in self.board :
+            if mx == x and my == y :
+                return False
+        return True
     
-    def placer (self, x, y):  #placer le pion du joueur
-        if not self.vide(x,y) :
+    def placer (self, x, y):
+        """placer le pion du joueur
+        """
+        if not self.vide(x,y) : #condition de placement (si c'est deja plein, on prend pas)
             return False
-        self.board[(x,y)] = self.current_player
-
-        if self.current_player == 1 :
-            self.current_player = 2
-
-        return self.verif_win
+        self.board.append((x, y, self.current_player)) #on place dans la liste la position et le type du joueur (rond ou croix)
+        win = self.verif_win(x, y) 
+        if self.current_player == 1 :  #on effectue le changement de joueur a la fin d'un tour
+            self.current_player = 2 
+        else :
+            self.current_player = 1
         
-    def Addition_pion (self, x, y, dx, dy, joueur): #compte le nombre de pion du joueur consécutif 
-        count = 0
+        return win #on renvoie la fonction de victoire
+
+    def Addition_pion (self, x, y, dx, dy, pos_joueur):
+        """compte le nombre de pion du joueur consécutif pour voir si il y a une victoire.
+
+        on parcourt la liste et on regarde s'il y a un 4 fois le meme symbole dans la meme direction 
+
+        """
+        count = 0 
         cx = x + dx
         cy = y + dy
-        while self.board((cx, cy)) == joueur :
+        while (cx, cy) in pos_joueur :
             count += 1
             cx += dx
             cy += dy
         return count
 
-    # def verif_win (self): #vérifie si le joueur gagne
+    def verif_win (self, x, y):
+        """vérifie si le joueur gagne
+
+        On fait l'ensemble des positions des joueurs depuis la liste
+        """
+        player = self.board[-1][2]
+        pos_joueur = set()
+        for mx, my, p in self.board:
+            if p == player:
+                pos_joueur.add((mx, my))
+        for dx, dy in DIRECTIONS:
+            total = (1 + self.Addition_pion(pos_joueur, x, y, dx, dy)
+                       + self.Addition_pion(pos_joueur, x, y, -dx, -dy))
+            if total >= 5:
+                return True
+        return False
+
+    def get_all_position (self) : 
+        """renvoie toute les positions des joueurs
+        """
+        return [(mx, my) for mx, my, _ in self.moves]
 
 
-    # def get_all_position (self) : #renvoie toute les positions des joueurs
+    def reset (self):
+        self.moves = []
+        self.current_player = 1
 
-
-    # def reset (self): # reset le dico pour une nouvelle partie
+    
