@@ -1,12 +1,15 @@
 import random
 import numpy as np
+import time
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 from enum import Enum
 
 # Type des cases du plateau
 class TypeCase(Enum):
     VIDE = 0
     CROIX = 1
-    CARRE = 2
+    ROND = 2
 
 # Un plateau
 class Plateau:
@@ -16,6 +19,7 @@ class Plateau:
         """
         this.taille = (10, 10)
         this.plateau = np.zeros(this.taille, dtype=int)
+        this.couleur = mcolors.ListedColormap(['white', 'blue', 'red'])
 
     def setCase(this, x, y, type):
         """_Modifie une case_
@@ -64,8 +68,15 @@ class Jeu:
         Initialise le plateau et les 2 joueurs
         """
         this.plateau = Plateau()
-        this.joueur1 = TypeCase.CARRE if int(input("Croix = 1 ou Carre = 2 : ")) == 2 else TypeCase.CROIX
-        this.joueur2 = TypeCase.CARRE if this.joueur1 == TypeCase.CROIX else TypeCase.CROIX
+
+        this.joueur1 = TypeCase.ROND
+        this.joueur2 = TypeCase.CROIX
+
+        #le premier pion est en 0, 0
+        this.plateau.setCase(0, 0, this.joueur1)
+
+        # distance maximal auquel le joueur peux jouer
+        this.maxStep = 0
 
     def afficher(this):
         """_Affiche dans la console le morpion_
@@ -74,27 +85,149 @@ class Jeu:
             for i in range(this.plateau.taille[0]):
                 print(this.plateau.getCase(i, j), end=" , ")
             print("\n")
+        print("==========================================")
+
+    def afficherMatPlot(this):
+        """_Affiche dans avec matplotlib le morpion_
+        """
+        plt.imshow(this.plateau.plateau, cmap=this.plateau.couleur)
+        for j in range(this.plateau.taille[1]):
+            for i in range(this.plateau.taille[0]):
+                val = this.plateau.getCase(i, j)
+                if val != 0:
+                    plt.text(j, i, '0' if val == this.joueur1.value else 'X',
+                             ha='center', va='center',
+                            fontsize=12, fontweight='bold', color='white')
+        plt.pause(1)
+        plt.clf()
 
     def run(this):
         """_Boucle de jeu_
         """
-        while True:           
 
-            # JOUEUR 1
-            x1, y1 = map(int, input("J1 : pos (x y) : ").split())
-            while this.plateau.getCase(x1, y1) != TypeCase.VIDE.value:
-                print("J1 : case pleine rejouer")
-                x1, y1 = map(int, input("J1 : pos (x y) : ").split())
-            this.plateau.setCase(x1, y1, this.joueur1)
+        while True:         
+            #this.dispersion()
+            this.maxStep = 1
 
-            # JOUEUR 2
-            x2, y2 = map(int, input("J2 : pos (x y) : ").split())
-            while this.plateau.getCase(x2, y2) != TypeCase.VIDE.value:
-                print("J2 : case pleine rejouer")
-                x2, y2 = map(int, input("J2 : pos (x y) : ").split())
-            this.plateau.setCase(x2, y2, this.joueur2)
+            #====================================================
 
-            this.afficher()
+            # JOUEUR 1 ROND         
+            # la vérification de la case n'est pas vide est faite dans la méthode zoneJouable   
+            x, y = this.zoneJouable(this.joueur1)
+            this.plateau.setCase(x, y, this.joueur1)
+            
+            # affiche le jeu 
+            this.afficherMatPlot()
+            # vérifie la victoire
+            if (this.victoire()): 
+                return
+            
+            #====================================================
+
+            # JOUEUR 2 CROIX
+            x, y = this.zoneJouable(this.joueur2)
+            this.plateau.setCase(x, y, this.joueur2)
+
+            # affiche le jeu 
+            this.afficherMatPlot()
+            # vérifie la victoire
+            if (this.victoire()): 
+                return
+
+            # il faut vérifié la victoire entre chaque joueur car si le joueur 1 gagne mais que le joueur 2 gagne aussi et que sont pion est plus proche du centre
+            # alors la méthode va détecté que le joueur 2 à gagné en premier alors que non 
+            # car la méthode this.victoire() commence en 0 0 puis augmente en x avant d'augmenter en y
+
+    def victoire(this):
+        """_Determine si un joueur à gagné_
+
+        Returns:
+            _bool_: _renvoie vrai si un joueur à gagné_
+        """
+        for y in range(this.plateau.taille[1]):
+            for x in range(this.plateau.taille[0]):
+                # récupère le type de la case en x, y
+                typeCase = this.plateau.getCase(x, y)
+
+                # si la case ne contient pas de joueur alors on coupe la boucle pour faire le tour suivant
+                if typeCase == TypeCase.VIDE.value:
+                    continue
+
+                joueur = this.joueur1 if typeCase == this.joueur1.value else this.joueur2
+
+                # horizontale
+                cpt = 0
+                # temps que la case suivante est la même que la précédente on augmente le compteur
+                while typeCase == this.plateau.getCase(cpt + x, y):
+                    cpt += 1
+                    if cpt == 3:                        
+                        print(f"{joueur.name}({joueur.value}) à gagné, x:{x}, y:{y}")
+                        return True
+
+                # verticale
+                cpt = 0
+                while typeCase == this.plateau.getCase(x, cpt + y):
+                    cpt += 1      
+                    if cpt == 3:
+                        print(f"{joueur.name}({joueur.value}) à gagné, x:{x}, y:{y}")
+                        return True
+                    
+                # diagonale
+                cpt = 0
+                while typeCase == this.plateau.getCase(cpt + x, cpt + y):
+                    cpt += 1      
+                    if cpt == 3:
+                        print(f"{joueur.name}({joueur.value}) à gagné, x:{x}, y:{y}")
+                        return True
+                    
+        return False
+        
+    def dispersion(this):
+        # random.random est compris entre 0(inclus) et 1(exclus) donc uniform permet d'avoir le 1 inclus
+        p = random.uniform(0, 1)
+        if p == 0:
+            this.maxStep = 1
+        elif p == 1:
+            this.maxStep = 1000
+        else:
+            this.maxStep = 1 / (1 - random.uniform(0, 1))
+
+    def zoneJouable(this, j):
+        """_Calcule la nouvelle position jouable pour un pion_ \n
+        La méthode récupère une position (x, y) autour de chaque pion sur le plateau\n
+        Et l'ajoute dans une liste, et sélectionne après parmit cette liste une position\n
+        que le prochain pion va recevoir
+
+        Returns:
+            _tuple_: _retourne les coordonnées x et y de la position à joué_
+        """
+        positionJouable = []
+        print(f"joueur : {j}")
+        # parcours le plateau 
+        for y in range(this.plateau.taille[1]):
+            for x in range(this.plateau.taille[0]):
+                # si il y a une case qui comporte un pion
+                if this.plateau.getCase(x, y) in (TypeCase.CROIX.value, TypeCase.ROND.value):
+                    # on selection aléatoirement une case jouable autour du pion 
+                    # par exemple pour 10 pions sur le plateau il y aura 10 positions jouables pour le prochain pion
+                    print(f"x - step : {max(0, x - this.maxStep)}" )
+                    print(f"y - step : {max(0, y - this.maxStep)}" )
+                    print(f"x + step : {x + this.maxStep}" )
+                    print(f"y + step : {y + this.maxStep}" )
+                    casesLibres = []
+                    for ty in range(max(0, x - this.maxStep), x + this.maxStep + 1):
+                        for tx in range(max(0, y - this.maxStep), y + this.maxStep + 1):
+                            if this.plateau.getCase(tx, ty) == TypeCase.VIDE:
+                                casesLibres.append((tx, ty))
+                    
+                    # cet valeur est stocké dans la liste de positionJouable
+                    if len(casesLibres) > 0:
+                        positionJouable.append(random.choice(casesLibres))
+        
+        
+        # retourne une position jouable pour le prochain pion depuis la liste de positions jouables
+        return (random.choice(positionJouable))
+                    
 
 if __name__ == "__main__":
     jeu = Jeu()
