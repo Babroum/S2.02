@@ -5,15 +5,17 @@ class App1_def :
         self.board = []   # liste de [(x, y, joueur...)]
         self.current_player = 1
 
-    #vérification de si le les coordonnés sont prise ou non
     def vide (self, x , y):
+        """vérification de si les coordonnés sont prise ou non
+        """
         for mx, my in self.board :
             if mx == x and my == y :
                 return False
         return True
-        
-    #placer le pion du joueur
-    def placer (self, x, y):  
+    
+    def placer (self, x, y):
+        """placer le pion du joueur
+        """
         if not self.vide(x,y) : #condition de placement (si c'est deja plein, on prend pas)
             return False
         self.board.append((x, y, self.current_player)) #on place dans la liste la position et le type du joueur (rond ou croix)
@@ -24,10 +26,13 @@ class App1_def :
             self.current_player = 1
         
         return win #on renvoie la fonction de victoire
-        
-    #compte le nombre de pion du joueur consécutif pour voir si il y a une victoire
-    def Addition_pion (self, x, y, dx, dy, pos_joueur): 
-        #on parcourt la liste et on regarde s'il y a un 4 fois le meme symbole dans la meme direction 
+
+    def Addition_pion (self, x, y, dx, dy, pos_joueur):
+        """compte le nombre de pion du joueur consécutif pour voir si il y a une victoire.
+
+        on parcourt la liste et on regarde s'il y a un 4 fois le meme symbole dans la meme direction 
+
+        """
         count = 0 
         cx = x + dx
         cy = y + dy
@@ -37,9 +42,12 @@ class App1_def :
             cy += dy
         return count
 
-    def verif_win (self, x, y): #vérifie si le joueur gagne
+    def verif_win (self, x, y):
+        """vérifie si le joueur gagne
+
+        On fait l'ensemble des positions des joueurs depuis la liste
+        """
         player = self.board[-1][2]
-        #on fait l'ensemble des positions des joueur depuis la liste
         pos_joueur = set()
         for mx, my, p in self.board:
             if p == player:
@@ -51,10 +59,14 @@ class App1_def :
                 return True
         return False
 
-    def get_all_position (self) : #renvoie toute les positions des joueurs
+    def get_all_position (self) : 
+        """renvoie toute les positions des joueurs
+        """
         return [(mx, my) for mx, my, _ in self.moves]
 
 
-    def reset (self): # reset la liste pour la prochaine partie
+    def reset (self):
         self.moves = []
         self.current_player = 1
+
+    
