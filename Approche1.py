@@ -1,3 +1,4 @@
+DIRECTIONS = [(1, 0), (0, 1), (1, 1), (1, -1)]  # H, B, ↗, ↘
 class App1_def :
 
     def __init__ (self):
@@ -26,7 +27,7 @@ class App1_def :
         
     #compte le nombre de pion du joueur consécutif pour voir si il y a une victoire
     def Addition_pion (self, x, y, dx, dy, pos_joueur): 
-        #on parcours la liste et on regarde si il y a un 3 fois le meme symbole dans la meme direction 
+        #on parcours la liste et on regarde si il y a un 4 fois le meme symbole dans la meme direction 
         count = 0 
         cx = x + dx
         cy = y + dy
@@ -36,10 +37,24 @@ class App1_def :
             cy += dy
         return count
 
-    #def verif_win (self): #vérifie si le joueur gagne
+    def verif_win (self, x, y): #vérifie si le joueur gagne
+        player = self.board[-1][2]
+        #on fait l'ensemble des positions des joueur depuis la liste
+        pos_joueur = set()
+        for mx, my, p in self.board:
+            if p == player:
+                pos_joueur.add((mx, my))
+        for dx, dy in DIRECTIONS:
+            total = (1 + self.Addition_pion(pos_joueur, x, y, dx, dy)
+                       + self.Addition_pion(pos_joueur, x, y, -dx, -dy))
+            if total >= 5:
+                return True
+        return False
+
+    def get_all_position (self) : #renvoie toute les positions des joueurs
+        return [(mx, my) for mx, my, _ in self.moves]
 
 
-    # def get_all_position (self) : #renvoie toute les positions des joueurs
-
-
-    # def reset (self): # reset le dico pour une nouvelle partie
+    def reset (self): # reset la liste pour la prochaine partie
+        self.moves = []
+        self.current_player = 1
