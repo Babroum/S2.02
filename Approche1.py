@@ -27,7 +27,7 @@ class App1_def :
         
     #compte le nombre de pion du joueur consécutif pour voir si il y a une victoire
     def Addition_pion (self, x, y, dx, dy, pos_joueur): 
-        #on parcours la liste et on regarde si il y a un 4 fois le meme symbole dans la meme direction 
+        #on parcourt la liste et on regarde s'il y a un 4 fois le meme symbole dans la meme direction 
         count = 0 
         cx = x + dx
         cy = y + dy
