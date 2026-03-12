@@ -121,11 +121,3 @@ def bot_mv(game,p):
         # Si la case tirée est libre, on la retourne
         if game.is_empty(nx, ny):
             return nx, ny
- 
-    # Fallback : cas très rare où les 10 000 essais échouent (plateau très dense)
-    # On cherche en spirale autour de l'origine la première case libre
-    for r in range(1, 10000):
-        for dx in range(-r, r + 1):
-            for dy in range(-r, r + 1):
-                if game.is_empty(dx, dy):
-                    return dx, dy
