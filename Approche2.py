@@ -18,7 +18,8 @@ class Plateau:
         """_Constructeur_\n
         Initialise le plateau avec un tableau numpy.array
         """
-        this.taille = (10, 10)
+        this.taille = (9, 9)
+        this.center = (int(this.taille[0] / 2), int(this.taille[1] / 2))
         this.plateau = np.zeros(this.taille, dtype=int)
         this.couleur = mcolors.ListedColormap(['white', 'blue', 'red'])
 
@@ -27,13 +28,12 @@ class Plateau:
         Args:
             x (_int_): _coordonnée en x_
             y (_int_): _coordonnée en y_
-            type (_TypeCase_): _type de la nouvelle case_
+            type (_int_): _type de la nouvelle case_
         """       
-        this.plateau[x, y] = type.value
+        this.plateau[x, y] = type
 
     def getCase(this, x, y):
         """_Renvoie une case_
-        Et redimensionne la case si le plateau est trop petit
         Args:
             x (_int_): _coordonnée en x_
             y (_int_): _coordonnée en y_
@@ -41,11 +41,6 @@ class Plateau:
         Returns:
             _int_: _valeur du type de la case_
         """
-        if (x > this.taille[0] - 1):
-            this.setTaille(x + 1, this.taille[1])
-        if (y > this.taille[1] - 1):
-            this.setTaille(this.taille[0], y + 1)
-
         return this.plateau[x, y]
         
     def setTaille(this, tailleX, tailleY):
@@ -59,9 +54,27 @@ class Plateau:
         # on colle l'ancienne plateau dans la nouvelle plus grande
         nvlPlateau[:this.taille[0], :this.taille[1]] = this.plateau
         # on assigne la plateau actuelle à la nouvelle
-        this.plateau = nvlPlateau  
+        this.plateau = nvlPlateau
+        # récupère la taille avant de modifier 
+        oldTaille = (this.taille[0], this.taille[1])
         # on assigne la taille à la nouvelle taille
         this.taille = (tailleX, tailleY)
+        # nouveau centre
+        this.center =  (tailleX / 2, tailleY / 2)
+        # décale toutes les cases
+        this.décalerPlateau(tailleX - oldTaille[0], tailleY - oldTaille[1])
+
+    def décalerPlateau(this, stepX, stepY):
+        """_décale les valeurs du tableau grâce à un pas_
+        Args:
+            stepX (_int_): _taille du pas en X_
+            stepY (_int_): _taille du pas en Y_
+        """
+        for y in range(this.taille[1] - stepY - 1, 0, -1):
+            for x in range(this.taille[0] - stepX - 1, 0, -1):
+                case = this.getCase(x, y)
+                this.setCase(x + stepX, y + stepY, case)
+                this.setCase(x, y, TypeCase.VIDE.value)
 
 class Jeu:
     def __init__(this):
@@ -74,7 +87,7 @@ class Jeu:
         this.joueur2 = TypeCase.CROIX
 
         #le premier pion est en 0, 0
-        this.plateau.setCase(0, 0, this.joueur1)
+        this.plateau.setCase(this.plateau.center[0], this.plateau.center[1], this.joueur1.value)
 
         # distance maximal auquel le joueur peux jouer
         this.maxStep = 0
@@ -113,7 +126,7 @@ class Jeu:
             # JOUEUR 1 ROND
             # la vérification de la case n'est pas vide est faite dans la méthode zoneJouable
             x, y = this.zoneJouable(this.joueur1)
-            this.plateau.setCase(x, y, this.joueur1)
+            this.plateau.setCase(x, y, this.joueur1.value)
 
             # affiche le jeu
             this.afficherMatPlot()
@@ -126,7 +139,7 @@ class Jeu:
 
             # JOUEUR 2 CROIX
             x, y = this.zoneJouable(this.joueur2)
-            this.plateau.setCase(x, y, this.joueur2)
+            this.plateau.setCase(x, y, this.joueur2.value)
 
             # affiche le jeu 
             this.afficherMatPlot()
@@ -211,6 +224,16 @@ class Jeu:
                     # on selection aléatoirement une case jouable autour du pion 
                     # par exemple pour 10 pions sur le plateau il y aura 10 positions jouables pour le prochain pion
                     casesLibres = []
+
+                    if (y - this.maxStep < 0):
+                        this.plateau.setTaille(this.plateau.taille[0], this.plateau.taille[1] + abs(y - this.maxStep))
+                    if (x - this.maxStep < 0):
+                        this.plateau.setTaille(this.plateau.taille[0] + abs(x - this.maxStep), this.plateau.taille[1])
+                    if (x + this.maxStep > this.plateau.taille[0] - 1):
+                        this.plateau.setTaille(x + this.maxStep + 1, this.plateau.taille[1])
+                    if (y + this.maxStep > this.plateau.taille[1] - 1):
+                        this.plateau.setTaille(this.plateau.taille[0], y + this.maxStep + 1)
+
                     for ty in range(max(0, y - this.maxStep), y + this.maxStep + 1):
                         for tx in range(max(0, x - this.maxStep), x + this.maxStep + 1):
                             if this.plateau.getCase(tx, ty) == TypeCase.VIDE.value:                                
@@ -223,7 +246,6 @@ class Jeu:
         
         # retourne une position jouable pour le prochain pion depuis la liste de positions jouables
         return (random.choice(positionJouable))
-                    
 
 if __name__ == "__main__":
     jeu = Jeu()
