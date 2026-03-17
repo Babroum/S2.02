@@ -11,6 +11,7 @@ class TypeCase(Enum):
     VIDE = 0
     CROIX = 1
     ROND = 2
+    TEST = 3
 
 # Un plateau
 class Plateau:
@@ -21,15 +22,27 @@ class Plateau:
         this.taille = (9, 9)
         this.center = (int(this.taille[0] / 2), int(this.taille[1] / 2))
         this.plateau = np.zeros(this.taille, dtype=int)
-        this.couleur = mcolors.ListedColormap(['white', 'blue', 'red'])
+        this.couleur = mcolors.ListedColormap(['white', 'blue', 'red', 'yellow'])
 
     def setCase(this, x, y, type):
         """_Modifie une case_
+        Et aggrandit le plateau si la case est endehors
         Args:
             x (_int_): _coordonnée en x_
             y (_int_): _coordonnée en y_
             type (_int_): _type de la nouvelle case_
         """       
+        # si coordonnées supérieur à la taille de grille
+        if (x > this.taille[0] - 1):
+            this.setTaille(x + 1, this.taille[1], False)
+        if (y > this.taille[1] - 1):
+            this.setTaille(this.taille[0], y + 1, False)
+
+        if (x < 0):
+            this.setTaille(this.taille[0] + abs(x), this.taille[1], True)
+        if (y < 0):
+            this.setTaille(this.taille[0], this.taille[1] + abs(y), True)
+
         this.plateau[x, y] = type
 
     def getCase(this, x, y):
@@ -41,26 +54,32 @@ class Plateau:
         Returns:
             _int_: _valeur du type de la case_
         """
+        # si case en dehors du plateau alors la case est vide
+        if x < 0 or y < 0 or x >= this.taille[0] or y >= this.taille[1]:
+            return TypeCase.VIDE.value
+        
         return this.plateau[x, y]
         
-    def setTaille(this, tailleX, tailleY):
-        """_Redimensionne le plateay_
+    def setTaille(this, tailleX, tailleY, faireDécallage):
+        """_Redimensionne le plateau_
         Args:
             tailleX (_int_): _nouvelle taille du plateau en X_
             tailleY (_int_): _nouvelle taille du plateau en Y_
+            faireDécallage (_boolean_): _Les valeurs doivent elles être décallé_
         """
-        # nouvelle plateau de 0
+        # nouveau plateau de 0
         nvlPlateau = np.zeros((tailleX, tailleY), dtype=int)
-        # on colle l'ancienne plateau dans la nouvelle plus grande
+        # on colle l'ancien plateau dans le nouveau plus grand
         nvlPlateau[:this.taille[0], :this.taille[1]] = this.plateau
-        # on assigne la plateau actuelle à la nouvelle
+        # on assigne le plateau actuel au nouveau
         this.plateau = nvlPlateau
         # récupère la taille avant de modifier 
         oldTaille = (this.taille[0], this.taille[1])
         # on assigne la taille à la nouvelle taille
         this.taille = (tailleX, tailleY)
-        # nouveau centre
-        this.center =  (tailleX / 2, tailleY / 2)
+        
+        if not faireDécallage: return
+
         # décale toutes les cases
         this.décalerPlateau(tailleX - oldTaille[0], tailleY - oldTaille[1])
 
@@ -70,11 +89,12 @@ class Plateau:
             stepX (_int_): _taille du pas en X_
             stepY (_int_): _taille du pas en Y_
         """
-        for y in range(this.taille[1] - stepY - 1, 0, -1):
-            for x in range(this.taille[0] - stepX - 1, 0, -1):
-                case = this.getCase(x, y)
-                this.setCase(x + stepX, y + stepY, case)
-                this.setCase(x, y, TypeCase.VIDE.value)
+        for y in range(this.taille[1] - stepY - 1, -1, -1):
+            for x in range(this.taille[0] - stepX - 1, -1, -1):
+                # pas de get ou set pour évité les appels récursifs
+                case = this.plateau[x, y]
+                this.plateau[x + stepX , y + stepY] = case
+                this.plateau[x, y] = TypeCase.VIDE.value
 
 class Jeu:
     def __init__(this):
@@ -87,7 +107,8 @@ class Jeu:
         this.joueur2 = TypeCase.CROIX
 
         #le premier pion est en 0, 0
-        this.plateau.setCase(this.plateau.center[0], this.plateau.center[1], this.joueur1.value)
+        this.plateau.setCase(this.plateau.center[0], this.plateau.center[1], TypeCase.TEST.value)
+        this.plateau.setCase(this.plateau.center[0], this.plateau.center[1] + 1, this.joueur1.value)
 
         # distance maximal auquel le joueur peux jouer
         this.maxStep = 0
@@ -108,7 +129,11 @@ class Jeu:
         for j in range(this.plateau.taille[1]):
             for i in range(this.plateau.taille[0]):
                 val = this.plateau.getCase(i, j)
-                if val != 0:
+                if val == 3:
+                    plt.text(j, i, '?',
+                             ha='center', va='center',
+                            fontsize=12, fontweight='bold', color='black')
+                elif val != 0:
                     plt.text(j, i, '0' if val == this.joueur1.value else 'X',
                              ha='center', va='center',
                             fontsize=12, fontweight='bold', color='white')
@@ -125,7 +150,7 @@ class Jeu:
 
             # JOUEUR 1 ROND
             # la vérification de la case n'est pas vide est faite dans la méthode zoneJouable
-            x, y = this.zoneJouable(this.joueur1)
+            x, y = this.zoneJouable()
             this.plateau.setCase(x, y, this.joueur1.value)
 
             # affiche le jeu
@@ -138,7 +163,7 @@ class Jeu:
             this.dispersion()
 
             # JOUEUR 2 CROIX
-            x, y = this.zoneJouable(this.joueur2)
+            x, y = this.zoneJouable()
             this.plateau.setCase(x, y, this.joueur2.value)
 
             # affiche le jeu 
@@ -185,9 +210,25 @@ class Jeu:
                         print(f"{joueur.name}({joueur.value}) à gagné, x:{x}, y:{y}")
                         return True
                     
-                # diagonale
+                # diagonale bas droite
                 cpt = 0
                 while typeCase == this.plateau.getCase(cpt + x, cpt + y):
+                    cpt += 1      
+                    if cpt == 3:
+                        print(f"{joueur.name}({joueur.value}) à gagné, x:{x}, y:{y}")
+                        return True
+                    
+                # diagonale bas gauche
+                cpt = 0
+                while typeCase == this.plateau.getCase(cpt - x, cpt + y):
+                    cpt += 1      
+                    if cpt == 3:
+                        print(f"{joueur.name}({joueur.value}) à gagné, x:{x}, y:{y}")
+                        return True
+                    
+                # diagonale haut droite
+                cpt = 0
+                while typeCase == this.plateau.getCase(cpt + x, cpt - y):
                     cpt += 1      
                     if cpt == 3:
                         print(f"{joueur.name}({joueur.value}) à gagné, x:{x}, y:{y}")
@@ -205,7 +246,7 @@ class Jeu:
         else:
             this.maxStep = int(1 / (1 - p))
 
-    def zoneJouable(this, j):
+    def zoneJouable(this):
         """_Calcule la nouvelle position jouable pour un pion_ \n
         La méthode récupère une position (x, y) autour de chaque pion sur le plateau\n
         Et l'ajoute dans une liste, et sélectionne après parmit cette liste une position\n
@@ -215,7 +256,6 @@ class Jeu:
             _tuple_: _retourne les coordonnées x et y de la position à joué_
         """
         positionJouable = []
-        print(f"step : {this.maxStep}")
         # parcours le plateau 
         for y in range(this.plateau.taille[1]):
             for x in range(this.plateau.taille[0]):
@@ -224,18 +264,11 @@ class Jeu:
                     # on selection aléatoirement une case jouable autour du pion 
                     # par exemple pour 10 pions sur le plateau il y aura 10 positions jouables pour le prochain pion
                     casesLibres = []
-
-                    if (y - this.maxStep < 0):
-                        this.plateau.setTaille(this.plateau.taille[0], this.plateau.taille[1] + abs(y - this.maxStep))
-                    if (x - this.maxStep < 0):
-                        this.plateau.setTaille(this.plateau.taille[0] + abs(x - this.maxStep), this.plateau.taille[1])
-                    if (x + this.maxStep > this.plateau.taille[0] - 1):
-                        this.plateau.setTaille(x + this.maxStep + 1, this.plateau.taille[1])
-                    if (y + this.maxStep > this.plateau.taille[1] - 1):
-                        this.plateau.setTaille(this.plateau.taille[0], y + this.maxStep + 1)
-
-                    for ty in range(max(0, y - this.maxStep), y + this.maxStep + 1):
-                        for tx in range(max(0, x - this.maxStep), x + this.maxStep + 1):
+                   
+                    # pour chaque case jouable autour de la case x, y
+                    for ty in range(y - this.maxStep, y + this.maxStep + 1):
+                        for tx in range(x - this.maxStep, x + this.maxStep + 1):
+                            # getcase va récupéré la case et si elle n'existe pas alors il va aggrandir le tableau en conséquence
                             if this.plateau.getCase(tx, ty) == TypeCase.VIDE.value:                                
                                 casesLibres.append((tx, ty))
                     
