@@ -1,4 +1,6 @@
 import random
+import time
+import matplotlib.pyplot as plt
 
 DIRECTIONS = [(1, 0), (0, 1), (1, 1), (1, -1)]  # H, B, ↗, ↘
 
@@ -11,7 +13,7 @@ class App1_def :
     def vide (self, x , y):
         """vérification de si les coordonnés sont prise ou non
         """
-        for mx, my in self.board :
+        for mx, my, _ in self.board :
             if mx == x and my == y :
                 return False
         return True
@@ -57,8 +59,8 @@ class App1_def :
                 pos_joueur.add((mx, my))
         for dx, dy in DIRECTIONS: #parcourt les 4 directions horizontales et les 2 diag repésenté par un veteur
             #combien de pions conséc du joueur sur trouve dans la direction lu
-            total = (1 + self.Addition_pion(pos_joueur, x, y, dx, dy) #sens normal (le 1 pour le pions qui vient d'etre poser en (x,y))
-                       + self.Addition_pion(pos_joueur, x, y, -dx, -dy)) #sens opposé
+            total = (1 + self.Addition_pion(x, y, dx, dy, pos_joueur) #sens normal (le 1 pour le pions qui vient d'etre poser en (x,y))
+                       + self.Addition_pion(x, y, -dx, -dy, pos_joueur)) #sens opposé    
             if total >= 5:
                 return True
         return False
@@ -121,3 +123,36 @@ def bot_mv(game,p):
         # Si la case tirée est libre, on la retourne
         if game.is_empty(nx, ny):
             return nx, ny
+def simulate_game(p=0.0, max_moves=500):
+    """
+    Simule une partie complète entre deux bots.
+    Retourne (winner, nb_moves, duration_s).
+    winner = 0 si match nul (limite de coups atteinte).
+    """
+    game = App1_def()
+    start = time.perf_counter()
+
+    for move_num in range(max_moves):
+        x, y = bot_mv(game, p)
+        win = game.placer(x, y)
+        if win:
+            winner = 1 if game.current_player == 2 else 2
+            duration = time.perf_counter() - start
+            return winner, move_num + 1, duration
+
+    duration = time.perf_counter() - start
+    return 0, max_moves, duration
+
+#main===============
+if __name__ == "__main__":
+    g = App1_def()
+    win = False
+    for i in range(5):
+        w = g.placer(i, 0)   # joueur 1 aligne horizontalement
+        if w:
+            win = True
+            break           #si il y une victoire, on arrete tout
+        if i < 5 - 1:
+            g.placer(i, 1)   # joueur 2 joue ailleurs
+    print(f"  Victoire détectée : {win}")
+    
