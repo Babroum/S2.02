@@ -4,6 +4,7 @@ import time
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from enum import Enum
+import math
 
 # Type des cases du plateau
 class TypeCase(Enum):
@@ -105,24 +106,23 @@ class Jeu:
         """_Boucle de jeu_
         """
 
-        while True:         
-            #this.dispersion()
-            this.maxStep = 1
+        while True:             
+            #====================================================         
+            this.dispersion()
 
-            #====================================================
-
-            # JOUEUR 1 ROND         
-            # la vérification de la case n'est pas vide est faite dans la méthode zoneJouable   
+            # JOUEUR 1 ROND
+            # la vérification de la case n'est pas vide est faite dans la méthode zoneJouable
             x, y = this.zoneJouable(this.joueur1)
             this.plateau.setCase(x, y, this.joueur1)
-            
-            # affiche le jeu 
+
+            # affiche le jeu
             this.afficherMatPlot()
             # vérifie la victoire
-            if (this.victoire()): 
+            if (this.victoire()):
                 return
             
             #====================================================
+            this.dispersion()
 
             # JOUEUR 2 CROIX
             x, y = this.zoneJouable(this.joueur2)
@@ -184,13 +184,13 @@ class Jeu:
         
     def dispersion(this):
         # random.random est compris entre 0(inclus) et 1(exclus) donc uniform permet d'avoir le 1 inclus
-        p = random.uniform(0, 1)
+        p = random.randrange(0, 1000, 1) / 1000
         if p == 0:
             this.maxStep = 1
         elif p == 1:
             this.maxStep = 1000
         else:
-            this.maxStep = 1 / (1 - random.uniform(0, 1))
+            this.maxStep = int(1 / (1 - p))
 
     def zoneJouable(this, j):
         """_Calcule la nouvelle position jouable pour un pion_ \n
@@ -202,7 +202,7 @@ class Jeu:
             _tuple_: _retourne les coordonnées x et y de la position à joué_
         """
         positionJouable = []
-        print(f"joueur : {j}")
+        print(f"step : {this.maxStep}")
         # parcours le plateau 
         for y in range(this.plateau.taille[1]):
             for x in range(this.plateau.taille[0]):
@@ -210,17 +210,13 @@ class Jeu:
                 if this.plateau.getCase(x, y) in (TypeCase.CROIX.value, TypeCase.ROND.value):
                     # on selection aléatoirement une case jouable autour du pion 
                     # par exemple pour 10 pions sur le plateau il y aura 10 positions jouables pour le prochain pion
-                    print(f"x - step : {max(0, x - this.maxStep)}" )
-                    print(f"y - step : {max(0, y - this.maxStep)}" )
-                    print(f"x + step : {x + this.maxStep}" )
-                    print(f"y + step : {y + this.maxStep}" )
                     casesLibres = []
-                    for ty in range(max(0, x - this.maxStep), x + this.maxStep + 1):
-                        for tx in range(max(0, y - this.maxStep), y + this.maxStep + 1):
-                            if this.plateau.getCase(tx, ty) == TypeCase.VIDE:
+                    for ty in range(max(0, y - this.maxStep), y + this.maxStep + 1):
+                        for tx in range(max(0, x - this.maxStep), x + this.maxStep + 1):
+                            if this.plateau.getCase(tx, ty) == TypeCase.VIDE.value:                                
                                 casesLibres.append((tx, ty))
                     
-                    # cet valeur est stocké dans la liste de positionJouable
+                    # cet valeur est stocké dans la list e de positionJouable
                     if len(casesLibres) > 0:
                         positionJouable.append(random.choice(casesLibres))
         
