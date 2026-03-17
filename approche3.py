@@ -1,6 +1,6 @@
 import numpy as np
 
-class Approche3:
+class Approche3 :
     def __init__(self, N=5):
         self.blocs = {}
         self.N = N
