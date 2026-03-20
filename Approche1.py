@@ -126,20 +126,21 @@ def bot_mv(game,p):
 
 def simulate_game(p=0.0, max_moves=500):
     """
-    Simule une partie complète entre deux bots.
-    Retourne (winner, nb_moves, duration_s).
+    Simule une partie entre deux bots.
     winner = 0 si match nul (limite de coups atteinte).
     """
-    game = App1_def()
-    start = time.perf_counter()
+    game = App1_def() #crée une nouvelle partie vide
+    start = time.perf_counter() # démarre un chrono pour voir le temps qu'a duré la partie
 
-    for move_num in range(max_moves):
-        x, y = bot_mv(game, p)
-        win = game.placer(x, y)
+    for move_num in range(max_moves): #compteur de coups
+        x, y = bot_mv(game, p) #bot choisi une case selon le paramètre p
+        win = game.placer(x, y) #bot place un pion et renvoie True si victoire
         if win:
-            winner = 1 if game.current_player == 2 else 2
+            winner = 1 if game.current_player == 2 else 2 #Si victoire (if win) : Comme placer switche le joueur après avoir joué, current_player pointe déjà sur le joueur suivant.
+            #                                             Donc si current_player == 2, c'est que le joueur 1 vient de gagner, et inversement.
             duration = time.perf_counter() - start
-            return winner, move_num + 1, duration
+            return winner, move_num + 1, duration #qui a gagné, en combien de coups, et en combien de temps.
+
 
     duration = time.perf_counter() - start
     return 0, max_moves, duration
