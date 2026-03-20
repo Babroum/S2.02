@@ -68,11 +68,11 @@ class App1_def :
     def get_all_position (self) : 
         """renvoie toute les positions des joueurs
         """
-        return [(mx, my) for mx, my, _ in self.moves]
+        return [(mx, my) for mx, my, _ in self.board]
 
 
     def reset (self):
-        self.moves = []
+        self.board = []
         self.current_player = 1
 #=====BOT=====
 
@@ -90,7 +90,7 @@ def bot_mv(game,p):
     Choisit un coup aléatoire selon le paramètre de dispersion p.
     """
     # Récupère les cases déjà jouées (des deux joueurs)
-    positions = game.get_all_podition()
+    positions = game.get_all_position()
  
     # Premier coup
     if not positions:
@@ -105,8 +105,8 @@ def bot_mv(game,p):
     # Calcule le rayon de dispersion selon p : p grand, zone large
     radius = dispersion_radius(p)
  
-    # On tente jusqu'à 10 000 fois de trouver une case libre au hasard
-    for _ in range(10000):
+    # On tente jusqu'à trouver une case libre au hasard
+    while True:
         if p == 0:
             # p = 0 : adjacence stricte
             # On choisit un pion déjà posé au hasard, puis un de ses 8 voisins
@@ -121,8 +121,9 @@ def bot_mv(game,p):
             ny = random.randint(int(ymin - radius), int(ymax + radius))
  
         # Si la case tirée est libre, on la retourne
-        if game.is_empty(nx, ny):
+        if game.vide(nx, ny):
             return nx, ny
+
 def simulate_game(p=0.0, max_moves=500):
     """
     Simule une partie complète entre deux bots.
@@ -145,14 +146,12 @@ def simulate_game(p=0.0, max_moves=500):
 
 #main===============
 if __name__ == "__main__":
-    g = App1_def()
-    win = False
-    for i in range(5):
-        w = g.placer(i, 0)   # joueur 1 aligne horizontalement
-        if w:
-            win = True
-            break           #si il y une victoire, on arrete tout
-        if i < 5 - 1:
-            g.placer(i, 1)   # joueur 2 joue ailleurs
-    print(f"  Victoire détectée : {win}")
-    
+    game = App1_def()
+    winner = None
+    for move_num in range(500):
+        x, y = bot_mv(game, p=0.5)  #p pour le style de jeu, varie selon la valeur
+        win = game.placer(x, y)
+        if win:
+            winner = 1 if game.current_player == 2 else 2
+            break
+    print(f"Gagnant : Joueur {winner} en {move_num + 1} coups")
