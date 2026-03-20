@@ -2,13 +2,17 @@ import random
 import time
 import matplotlib.pyplot as plt
 
+# Approche 1
+# Fait par amadeus
+
 DIRECTIONS = [(1, 0), (0, 1), (1, 1), (1, -1)]  # H, B, ↗, ↘
 
 class App1_def :
 
-    def __init__ (self):
+    def __init__ (self, n):
         self.board = []   # liste de [(x, y, joueur...)]
         self.current_player = 1
+        self.n = n # n symboles à aligné pour gagner
 
     def vide (self, x , y):
         """vérification de si les coordonnés sont prise ou non
@@ -128,6 +132,7 @@ def simulate_game(p=0.0, max_moves=500):
     """
     Simule une partie entre deux bots.
     winner = 0 si match nul (limite de coups atteinte).
+    Utiliser pour tester le code
     """
     game = App1_def() #crée une nouvelle partie vide
     start = time.perf_counter() # démarre un chrono pour voir le temps qu'a duré la partie
@@ -142,8 +147,8 @@ def simulate_game(p=0.0, max_moves=500):
             return winner, move_num + 1, duration #qui a gagné, en combien de coups, et en combien de temps.
 
 #main===============
-if __name__ == "__main__":
-    game = App1_def()
+if __name__ == "__main__":    
+    game = App1_def(random.randint(2, 10))
     move_num = 0 #compteur du nombre de coups jouer
     while True:
         x, y = bot_mv(game, p=1)  #p pour le style de jeu, varie selon la valeur, plus p proche de 1 plus la partie est longue

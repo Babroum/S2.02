@@ -1,6 +1,11 @@
 import random
 import time
-from approche4 import placer, reinitialiser, nodes
+from Approche4_1 import placer, reinitialiser, nodes
+
+# Approche 4_2
+# Fait par keynar
+
+# ne répond pas à la consigne
 
 N = 5
 MAX_COUPS = 200

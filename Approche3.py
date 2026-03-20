@@ -77,16 +77,13 @@ class Jeu:
             print(f"Morpion {cle} :\n{morpion}") # Afficher le morpion
 
     def run(self):
+        # méthode pour débug pas utilisé dans la version final
         limite = 1000 # Nb max de coups
         coups = 0 # Nb coups 
 
         while coups < limite:
             # Récupère le résultat du coup
             resultat = self.jouerCoup(self.joueur1)
-            # Si impossible de jouer
-            if resultat is None:
-                print("Aucune case jouable pour joueur1")
-                break
             # Si joueur1 gagné
             if resultat:
                 print("Le joueur1 (CROIX) a gagné !")
@@ -96,9 +93,6 @@ class Jeu:
             # Récupère le résultat du coup
             resultat = self.jouerCoup(self.joueur2)
             # Si impossible de jouer
-            if resultat is None:
-                print("Aucune case jouable pour joueur2")
-                break
             # Si joueur2 gagné
             if resultat:
                 print("Le joueur2 (ROND) a gagné !")
