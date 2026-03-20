@@ -1,4 +1,6 @@
 import random
+import time
+import matplotlib.pyplot as plt
 
 DIRECTIONS = [(1, 0), (0, 1), (1, 1), (1, -1)]  # H, B, ↗, ↘
 
@@ -11,7 +13,7 @@ class App1_def :
     def vide (self, x , y):
         """vérification de si les coordonnés sont prise ou non
         """
-        for mx, my in self.board :
+        for mx, my, _ in self.board :
             if mx == x and my == y :
                 return False
         return True
@@ -57,8 +59,8 @@ class App1_def :
                 pos_joueur.add((mx, my))
         for dx, dy in DIRECTIONS: #parcourt les 4 directions horizontales et les 2 diag repésenté par un veteur
             #combien de pions conséc du joueur sur trouve dans la direction lu
-            total = (1 + self.Addition_pion(pos_joueur, x, y, dx, dy) #sens normal (le 1 pour le pions qui vient d'etre poser en (x,y))
-                       + self.Addition_pion(pos_joueur, x, y, -dx, -dy)) #sens opposé
+            total = (1 + self.Addition_pion(x, y, dx, dy, pos_joueur) #sens normal (le 1 pour le pions qui vient d'etre poser en (x,y))
+                       + self.Addition_pion(x, y, -dx, -dy, pos_joueur)) #sens opposé    
             if total >= 5:
                 return True
         return False
@@ -66,11 +68,11 @@ class App1_def :
     def get_all_position (self) : 
         """renvoie toute les positions des joueurs
         """
-        return [(mx, my) for mx, my, _ in self.moves]
+        return [(mx, my) for mx, my, _ in self.board]
 
 
     def reset (self):
-        self.moves = []
+        self.board = []
         self.current_player = 1
 #=====BOT=====
 
@@ -88,7 +90,7 @@ def bot_mv(game,p):
     Choisit un coup aléatoire selon le paramètre de dispersion p.
     """
     # Récupère les cases déjà jouées (des deux joueurs)
-    positions = game.get_all_podition()
+    positions = game.get_all_position()
  
     # Premier coup
     if not positions:
@@ -103,8 +105,8 @@ def bot_mv(game,p):
     # Calcule le rayon de dispersion selon p : p grand, zone large
     radius = dispersion_radius(p)
  
-    # On tente jusqu'à 10 000 fois de trouver une case libre au hasard
-    for _ in range(10000):
+    # On tente jusqu'à trouver une case libre au hasard
+    while True:
         if p == 0:
             # p = 0 : adjacence stricte
             # On choisit un pion déjà posé au hasard, puis un de ses 8 voisins
@@ -119,5 +121,35 @@ def bot_mv(game,p):
             ny = random.randint(int(ymin - radius), int(ymax + radius))
  
         # Si la case tirée est libre, on la retourne
-        if game.is_empty(nx, ny):
+        if game.vide(nx, ny):
             return nx, ny
+
+def simulate_game(p=0.0, max_moves=500):
+    """
+    Simule une partie entre deux bots.
+    winner = 0 si match nul (limite de coups atteinte).
+    """
+    game = App1_def() #crée une nouvelle partie vide
+    start = time.perf_counter() # démarre un chrono pour voir le temps qu'a duré la partie
+
+    while True : #compteur de coups
+        x, y = bot_mv(game, p) #bot choisi une case selon le paramètre p
+        win = game.placer(x, y) #bot place un pion et renvoie True si victoire
+        if win:
+            winner = 1 if game.current_player == 2 else 2 #Si victoire (if win) : Comme placer switche le joueur après avoir joué, current_player pointe déjà sur le joueur suivant.
+            #                                             Donc si current_player == 2, c'est que le joueur 1 vient de gagner, et inversement.
+            duration = time.perf_counter() - start
+            return winner, move_num + 1, duration #qui a gagné, en combien de coups, et en combien de temps.
+
+#main===============
+if __name__ == "__main__":
+    game = App1_def()
+    move_num = 0 #compteur du nombre de coups jouer
+    while True:
+        x, y = bot_mv(game, p=1)  #p pour le style de jeu, varie selon la valeur, plus p proche de 1 plus la partie est longue
+        win = game.placer(x, y) 
+        move_num += 1 #incrémentation du nombre de coups
+        if win:
+            winner = 1 if game.current_player == 2 else 2
+            break
+    print(f"Gagnant : Joueur {winner} en {move_num} coups")
