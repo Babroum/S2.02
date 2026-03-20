@@ -132,7 +132,7 @@ def simulate_game(p=0.0, max_moves=500):
     game = App1_def() #crée une nouvelle partie vide
     start = time.perf_counter() # démarre un chrono pour voir le temps qu'a duré la partie
 
-    for move_num in range(max_moves): #compteur de coups
+    while True : #compteur de coups
         x, y = bot_mv(game, p) #bot choisi une case selon le paramètre p
         win = game.placer(x, y) #bot place un pion et renvoie True si victoire
         if win:
@@ -141,18 +141,15 @@ def simulate_game(p=0.0, max_moves=500):
             duration = time.perf_counter() - start
             return winner, move_num + 1, duration #qui a gagné, en combien de coups, et en combien de temps.
 
-
-    duration = time.perf_counter() - start
-    return 0, max_moves, duration
-
 #main===============
 if __name__ == "__main__":
     game = App1_def()
-    winner = None
-    for move_num in range(500):
-        x, y = bot_mv(game, p=0.5)  #p pour le style de jeu, varie selon la valeur
-        win = game.placer(x, y)
+    move_num = 0 #compteur du nombre de coups jouer
+    while True:
+        x, y = bot_mv(game, p=1)  #p pour le style de jeu, varie selon la valeur, plus p proche de 1 plus la partie est longue
+        win = game.placer(x, y) 
+        move_num += 1 #incrémentation du nombre de coups
         if win:
             winner = 1 if game.current_player == 2 else 2
             break
-    print(f"Gagnant : Joueur {winner} en {move_num + 1} coups")
+    print(f"Gagnant : Joueur {winner} en {move_num} coups")
