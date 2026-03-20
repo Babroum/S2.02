@@ -4,65 +4,70 @@ from enum import Enum
 
 class TypeCase(Enum):
     VIDE = 0    # Case pas joué
-    CROIX = 1   # symbole joueur 1
-    ROND = 2    # symbole joueur 2
+    CROIX = 1   # Case joué par joueur1
+    ROND = 2    # Case joué par joueur2
 
 class Plateau:
-    # Constructeur
+    # Constructeur de Plateau
     def __init__(self):
         self.morpions = {} # Dictionnaire vide (va contenir les morpions utilisés pour jouer)
 
-    # Méthodes
+    # Méthodes de Plateau
     def coordsMorpion(self, x, y):
-        # Morpion
+        # Calcul des coords du morpion
         mx = x // 3 # Position x du morpion
         my = y // 3 # Position y du morpion
 
-        # Contenu du morpion
+        # Calcul des coords du contenu (Contiendra TypeCase)
         px = x % 3 # Position x dans le morpion
         py = y % 3 # Position y dans le morpion
 
-        # Tuple(mx, my) = clé du dictionnaire
+        # Retourne tuple (clé dictionnaire) et les positions du contenu
         return (mx, my), px, py
     
     def setCase(self, x, y, type):
-        # Assignation des variables dans l'ordre du return
+        # Assignation des variables (dans l'ordre du return)
         cle, px, py = self.coordsMorpion(x, y)
 
-        # Création du morpion s'il n'existait pas
+        # Création morpion si non existant
         if cle not in self.morpions:
-            self.morpions[cle] = np.zeros((3, 3), dtype=int) # On spécifie le type int (Défaut = float)
+            self.morpions[cle] = np.zeros((3, 3), dtype=int) # Tableau numpy rempli de 0 # On spécifie le type int (Défaut = float)
 
-        self.morpions[cle][py][px] = type.value # À NOTER : sur numpy c'est posY puis posX
+        # Rempli la case visée
+        self.morpions[cle][py][px] = type.value # Sur numpy c'est posY puis posX
             
     def getCase(self, x, y):
+        # Assignation des variables
         cle, px, py = self.coordsMorpion(x, y)
 
+        # Retourne valeur vide si non existant
         if cle not in self.morpions:
             return TypeCase.VIDE.value
         
+        # Retourne valeur de la case visée
         return self.morpions[cle][py][px]
     
-    # Utiliser plus tard pour la liste casesLibres
+    # Retourne vrai si valeur case 0 sinon faux
     def estVide(self, x, y):
         return self.getCase(x, y) == TypeCase.VIDE.value
     
 class Jeu:
-    # Constructeur
-    def __init__(self, n=5): # Mettre par défaut n=5 (alignement pour gagner)
+    # Constructeur de Jeu
+    def __init__(self, n=5): # On met par défaut n=5 (alignement pour gagner)
         # Création du plateau
         self.plateau = Plateau()
 
-        # Assignation des types de case pour chaque joueur
+        # Assignation typeCase pour chaque joueur
         self.joueur1 = TypeCase.CROIX
         self.joueur2 = TypeCase.ROND
 
         # Nb alignement pour gagner 
         self.n = n
 
-        # Premier coup (forcemment en (0, 0))
+        # Premier coup en (0,0)
         self.plateau.setCase(0, 0, self.joueur1)
 
+        # Valeur par défaut dispersion
         self.dispersion = 1
 
     def afficher(self):
@@ -72,47 +77,57 @@ class Jeu:
             print(f"Morpion {cle} :\n{morpion}") # Afficher le morpion
 
     def run(self):
-        limite = 9999 # nb max de coups
-        coups = 0 # nb coups (à 1 car le premier coup est en (0,0) par le joueur1)
+        limite = 1000 # Nb max de coups
+        coups = 0 # Nb coups 
 
         while coups < limite:
-            # Vérification position jouable            
-            pos = self.zoneJouable(self.joueur2)
-
-            if pos is None:
-                print("Aucune case jouable pour le joueur 1.")
+            # Récupère le résultat du coup
+            resultat = self.jouerCoup(self.joueur1)
+            # Si impossible de jouer
+            if resultat is None:
+                print("Aucune case jouable pour joueur1")
                 break
-
-            x, y = pos 
-
-            # Commence avec le joueur2 puisque le premier coup a été fait par le joueur1 en (0, 0)
-            self.plateau.setCase(x, y, self.joueur2)
-
-            # Vérificaton de la victoire après coup
-            if self.victoire(x, y, self.joueur2):
-                print(f"Joueur2 (ROND) a gagné en ({x}, {y}) !")
-                return # fin
-            
-            coups += 1
-            
-            # Même chose avec le joueur1
-            pos = self.zoneJouable(self.joueur1)
-
-            if pos is None:
-                print("Aucune case jouable pour le joueur 1.")
-                break
-
-            x, y = pos 
-
-            self.plateau.setCase(x, y, self.joueur1)
-
-            if self.victoire(x, y, self.joueur1):
-                print(f"Joueur1 (CROIX) a gagné en ({x}, {y}) !")
+            # Si joueur1 gagné
+            if resultat:
+                print("Le joueur1 (CROIX) a gagné !")
                 return
-            
             coups += 1
 
-        print(f"Pas de gagnant après {coups} coups.")
+            # Récupère le résultat du coup
+            resultat = self.jouerCoup(self.joueur2)
+            # Si impossible de jouer
+            if resultat is None:
+                print("Aucune case jouable pour joueur2")
+                break
+            # Si joueur2 gagné
+            if resultat:
+                print("Le joueur2 (ROND) a gagné !")
+                return
+            coups += 1
+        
+        print(f"Pas de gagnant après {coups} coups")
+
+    def jouerCoup(self, joueur):
+        # Assignation d'une dispersion pour le coup du joueur1
+        self.valeurDispersion(random.uniform(0, 1))
+
+        # Vérification position jouable pour joueur1   
+        pos = self.zoneJouable(self.joueur1)
+
+        if pos is None:
+            return None # Plus de case dispo
+        
+        # Assignations des valeurs retournées par zoneJouable
+        x, y = pos 
+
+        # Joueur1 joue
+        self.plateau.setCase(x, y, joueur)
+
+        # Vérificaton de la victoire après coup
+        if self.victoire(x, y, joueur):
+            return joueur # Retourne gagnant
+        
+        return False # Pas de gagnant
 
     def victoire(self, x, y, joueur):
         
@@ -124,7 +139,7 @@ class Jeu:
             # Que 4 directions puisqu'on fera le sens opposé pour avoir les 8
         ]
 
-        # Dépaqutage du tuple dans directions 
+        # Pour chaque direction
         for dx, dy in directions:
             # 1 celui sur lequel on est positionné compte
             compte = 1
@@ -142,10 +157,11 @@ class Jeu:
                     compte += 1
                 else :
                     break
-
+            
+            # Gagné
             if compte >= self.n:
                 return True
-            
+        
         return False
     
     def valeurDispersion(self, p):
@@ -157,36 +173,39 @@ class Jeu:
             self.dispersion = int(1/(1-p))
 
     def zoneJouable(self, joueur):
-    
-        sx = []
-        sy = []
+        cx = [] # Liste des coords x de chaque coup joué
+        cy = [] # Liste des coords y de chaque coup joué
 
-        # On Parcourt tous les morpions 
+        # Pour chaque morpion
         for cle in self.plateau.morpions:
             # On stocke le morpion
             morpion = self.plateau.morpions[cle]
+
             # On récupère les coordonnées
             mx = cle[0]
             my = cle[1]
 
-            # On parcourt le morpion
+            # Pour chaque position dans le morpion
             for py in range(3):
                 for px in range(3):
                     
-                    # On check si la case est utilisée
+                    # Check si case utilisée
                     if morpion[py][px] != TypeCase.VIDE.value:
                         # Inverse de coordsMorpion
-                        sx.append(mx * 3 + px)
-                        sy.append(my * 3 + py)
+                        cx.append(mx * 3 + px)
+                        cy.append(my * 3 + py)
 
-        xmin = min(sx) - self.dispersion
-        xmax = max(sx) + self.dispersion
-        ymin = min(sy) - self.dispersion
-        ymax = max(sy) + self.dispersion
+        xmin = min(cx) - self.dispersion # Coup le plus à gauche
+        xmax = max(cx) + self.dispersion # Coup le plus à droite
+        ymin = min(cy) - self.dispersion # Coup le plus haut
+        ymax = max(cy) + self.dispersion # Coup le plus bas
+        # Étendu par dispersion pour jouer autour du coup
 
-        for _ in range(10000):
-            x = random.randint(xmin, xmax)
-            y = random.randint(ymin, ymax)
+        # On teste 10067 fois
+        for _ in range(10067):
+            x = random.randint(xmin, xmax) # Valeur aléatoire dans la zone xmin xmax
+            y = random.randint(ymin, ymax) # Valeur aléatoire dans la zone ymin ymax
+            # Si case vide renvoie
             if self.plateau.estVide(x, y):
                 return (x, y)
 
@@ -195,6 +214,7 @@ if __name__ == "__main__":
     # Crée une partie avec N=5 (Gomoku)
     jeu = Jeu(n=5)
 
+    # Assignation valeur p (dispersion)
     jeu.valeurDispersion(1)
 
     # Lance la boucle de jeu
