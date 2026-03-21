@@ -170,7 +170,8 @@ for i in range(nbPartie):
         a3Moyenne = a3
         a4Moyenne = a4
 
-print(f"Temps moyen pour les {nbPartie} parties : {sum(tmpMoyen) / len(tmpMoyen)} secondes")
+if nbPartie > 1 :
+    print(f"Temps moyen pour les {nbPartie} parties : {sum(tmpMoyen) / len(tmpMoyen)} secondes")
 
 fig, ax = plt.subplots(figsize=(10, 6))
 
@@ -179,9 +180,15 @@ ax.plot(range(len(a2Moyenne)), a2Moyenne, marker='s', label='Approche 2')
 ax.plot(range(len(a3Moyenne)), a3Moyenne, marker='^', label='Approche 3')
 ax.plot(range(len(a4Moyenne)), a4Moyenne, marker='D', label='Approche 4')
 
-ax.set_xlabel('Nombre de coup jouer')
-ax.set_ylabel('Temps d\'exécution (ms)')
-ax.set_title('Temps d\'exécution d\'un coup en fonction du nombre de coup jouer')
+if nbPartie > 1:
+    ax.set_xlabel('Nombre de partie jouer')
+    ax.set_ylabel('Temps d\'exécution (somme temps d\'exécution des coups) (ms)')
+    ax.set_title('Temps d\'exécution d\'une partie en fonction du nombre de partie jouer')
+else :
+    ax.set_xlabel('Nombre de coup jouer')
+    ax.set_ylabel('Temps d\'exécution (ms)')
+    ax.set_title('Temps d\'exécution d\'un coup en fonction du nombre de coup jouer')
+
 ax.legend()
 ax.grid(True, linestyle='--', alpha=0.5)
 ax.set_yscale('log')
