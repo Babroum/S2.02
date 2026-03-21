@@ -56,7 +56,7 @@ class App1_def :
         On fait l'ensemble des positions des joueurs depuis la liste
         """
         player = self.board[-1][2]
-        pos_joueur = set()
+        pos_joueur = set() #set permet de ne pas pacourir toute la liste et donc d'aller plus vite dans la recherche, il va directement a la bonne case mémoireqqssssssssssssssssssssssssss ze<<<<<>>>>>>>>ZDQSDfd
         for mx, my, p in self.board:
             if p == player:
                 pos_joueur.add((mx, my))
