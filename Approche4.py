@@ -8,9 +8,8 @@ from enum import Enum
 # Fait par gaël
 
 class Type(Enum):
-    VIDE = 0
-    CROIX = 1
-    ROND = 2
+    CROIX = 0
+    ROND = 1
 
 class Noeud:    
 
@@ -64,13 +63,10 @@ class GestionNoeud:
         voisins = []
         # pour toutes les directions, donc tous les voisins adjacents
         for dir in noeud.DIRECTIONS:
-            # pour tous les noeuds existant dans la liste d'adjacence
-            for n in noeuds:
-                # si une direction égale un noeud existant, donc si il y a un voisin
-                if n.pos == dir:
-                    # on ajoute ce voisin (créer l'arrête)
-                    if GestionNoeud.getNoeud(GestionNoeud.positions, dir) != None:
-                        voisins.append(GestionNoeud.getNoeud(GestionNoeud.positions, dir))
+            voisin = GestionNoeud.getNoeud(GestionNoeud.positions, dir)
+            # si le voisin existe on l'ajoute en arrête
+            if voisin != None:
+                voisins.append(GestionNoeud.getNoeud(GestionNoeud.positions, dir))
 
         # puis ajoute le noeud en clé et ses voisins en valeur dans la liste d'adjacence
         noeuds[noeud] = voisins
@@ -86,6 +82,8 @@ class GestionNoeud:
             Noeud: noeud à la position (x, y), sinon None si le noeud n'existe pas
         """
         # le fait de ne plus faire de for on passe de O(n) à O(1) donc pour les get dans victoire, ... on passe de O(n²) à O(n)
+        # le get retourne la valeur de la clé fourni en premier paramètre sinon None
+        # le get hash la clé en O(1) et donc le hash donne directement l'emplacement mémoire de la valeur sans parcourir le dictionnaire
         return positions.get(pos, None)
 
 class Jeu:
@@ -102,9 +100,16 @@ class Jeu:
         # les clés sont de type Noeud
         # les valeurs sont des listes de Noeud
         this.noeuds = {}
+        GestionNoeud.positions = {}
 
         this.joueur1 = Type.ROND
         this.joueur2 = Type.CROIX
+
+        # le premier pion est en (0, 0)
+        this.xmin = 0
+        this.xmax = 0  
+        this.ymin = 0
+        this.ymax = 0
 
         # le dictionnaire sera modifié car c'est une référence qui est passée en paramètre 
         # donc les modifications sont visible sans besoin de return le dictionnaire modifié
@@ -132,32 +137,21 @@ class Jeu:
 
     def zoneJouable(this) -> tuple:
         """<b>Calcule la nouvelle position jouable pour un pion</b> \n
-        Même méthode que l'approche 2, on regarde autour de chaque noeud avec le maxstep appliqué aux coordonnées du noeud (+/-) \n
-        Et si une position est disponible on la considère comme jouable, avant de selectionner la position jouable à la fin
-
+        Le but est de prendre le pion en x,y le plus éloigné en négatif et le pions en x,y le plus éloigné en positif \n
+        Pour après appliquer le pas autour de cette zone de jeu (carré formé pas les 2 pions les plus éloignés)
         Returns:
             tuple: _description_
         """
-        positionJouable = []
-        # pour chaque noeud existant
-        for n in this.noeuds:
-            x = n.pos[0]
-            y = n.pos[1]
+        xmin = this.xmin - this.maxStep
+        xmax = this.xmax + this.maxStep
+        ymin = this.ymin - this.maxStep
+        ymax = this.ymax + this.maxStep
 
-            casesLibres = []                  
-            # on regarde autour du noeud 
-            for ty in range(y - this.maxStep, y + this.maxStep + 1):
-                for tx in range(x - this.maxStep, x + this.maxStep + 1):   
-                    # si la position ne contient pas de noeud alors on l'ajoute en temps que position jouables
-                    if GestionNoeud.getNoeud(GestionNoeud.positions, (tx, ty)) == None:                      
-                        casesLibres.append((tx, ty))
-            
-            if len(casesLibres) > 0:
-                # on tire aléatoirement autour de chaque noeud un position jouable
-                positionJouable.append(random.choice(casesLibres))
-
-        # puis on retire aléatoirement parmi les positions possibles
-        return (random.choice(positionJouable))
+        while True:
+            x = random.randint(xmin, xmax)
+            y = random.randint(ymin, ymax)
+            if GestionNoeud.getNoeud(GestionNoeud.positions, (x, y)) == None:
+                return (x, y)
 
     def victoire(this) -> bool:
         """Détermine si un joueur a gagné
@@ -229,6 +223,12 @@ class Jeu:
         x, y = this.zoneJouable()
         GestionNoeud.ajouterNoeud(this.noeuds, Noeud(x, y, joueur))
 
+        # on récupère les positions les plus éloignés si il y en a une nouvelle
+        this.xmin = min(this.xmin, x)
+        this.xmax = max(this.xmax, x)
+        this.ymin = min(this.ymin, y)
+        this.ymax = max(this.ymax, y)
+
         # affiche le jeu
         if (this.afficher):
             this.afficherNetWorkX()
@@ -242,15 +242,12 @@ class Jeu:
         
 if __name__ == "__main__":
     affichage = True
-    jeu = Jeu(3, affichage)
-    cpt = 0    
-    while cpt < 100:
-        cpt += 1
+    jeu = Jeu(3, affichage)  
+    while True:
         t1 = jeu.jouerCoup(jeu.joueur1, 4)
         if t1 == -1:
             break
 
-        cpt += 1
         t2 = jeu.jouerCoup(jeu.joueur2, 4)
         if t2 == -1:
             break

@@ -7,11 +7,11 @@ import Approche2 as A2
 import Approche3 as A3
 import Approche4 as A4
 
-# liste du temps d'exécution de chaque coup de chaque approche
-a1 = []
-a2 = []
-a3 = []
-a4 = []
+# liste du temps d'exécution en moyenne de chaque partie de chaque approche
+a1Moyenne = []
+a2Moyenne = []
+a3Moyenne = []
+a4Moyenne = []
 
 def dispersion():
     """<b>Calcule la dispersion</b>
@@ -33,8 +33,14 @@ def play(coup):
     Args:
         coup (_int_): nombre de coup max avant de stopper l'exécution
     """
+    # liste du temps d'exécution de chaque coup de chaque approche
+    a1 = []
+    a2 = []
+    a3 = []
+    a4 = []
+
     # N symboles à aligné, commence à 2 pour évité de gagné a 1 symbole et limite à 10 pour que ce soit réalisable
-    gomoku = random.randint(2, 10)
+    gomoku = 5 #random.randint(2, 10)
     print(f"Gomoku : {gomoku}")
 
     # Initialise le jeu des 4 approches
@@ -69,15 +75,15 @@ def play(coup):
             else:
                 a1.append((time.time() - startTime) * 1000)
 
-            # J2
-            startTime = time.time()
-            x, y = A1.bot_mv(App1, p2)
-            win = App1.placer(x, y)             
-            if win:
-                app1Win = True
-                print(f"app1 gagne au coup nb : {cpt + 1}")
-            else:
-                a1.append((time.time() - startTime) * 1000)
+                # J2 (dans le else car si le j1 gagne on fait pas jouer le j2)
+                startTime = time.time()
+                x, y = A1.bot_mv(App1, p2)
+                win = App1.placer(x, y)             
+                if win:
+                    app1Win = True
+                    print(f"app1 gagne au coup nb : {cpt + 1}")
+                else:
+                    a1.append((time.time() - startTime) * 1000)
         
         # APPROCHE 2
         if not app2Win:
@@ -90,13 +96,13 @@ def play(coup):
             else:
                 a2.append(j1)
 
-            # J2
-            j2 = App2.jouerCoup(App2.joueur2, False, p2)
-            if j2 == -1:
-                app2Win = True
-                print(f"app2 gagne au coup nb : {cpt + 1}")
-            else:
-                a2.append(j2)
+                # J2
+                j2 = App2.jouerCoup(App2.joueur2, False, p2)
+                if j2 == -1:
+                    app2Win = True
+                    print(f"app2 gagne au coup nb : {cpt + 1}")
+                else:
+                    a2.append(j2)
 
         # APPROCHE 3
         if not app3Win:
@@ -109,14 +115,14 @@ def play(coup):
             else:
                 a3.append((time.time() - startTime) * 1000)
 
-            # J2
-            startTime = time.time()
-            j2 = App3.jouerCoup(App3.joueur2, p2)
-            if j2:
-                app3Win = True
-                print(f"app3 gagne au coup nb : {cpt + 1}")
-            else:
-                a3.append((time.time() - startTime) * 1000)
+                # J2
+                startTime = time.time()
+                j2 = App3.jouerCoup(App3.joueur2, p2)
+                if j2:
+                    app3Win = True
+                    print(f"app3 gagne au coup nb : {cpt + 1}")
+                else:
+                    a3.append((time.time() - startTime) * 1000)
 
         # APPROCHE 4
         if not app4Win:
@@ -128,34 +134,56 @@ def play(coup):
             else:
                 a4.append(j1)
 
-            # J2
-            j2 = App4.jouerCoup(App4.joueur2, p2)
-            if j2 == -1:
-                app4Win = True
-                print(f"app4 gagne au coup nb : {cpt + 1}")
-            else:
-                a4.append(j2)
+                # J2
+                j2 = App4.jouerCoup(App4.joueur2, p2)
+                if j2 == -1:
+                    app4Win = True
+                    print(f"app4 gagne au coup nb : {cpt + 1}")
+                else:
+                    a4.append(j2)
 
         cpt += 2 # 2 coups ont été joués pour chaque approche
+
+    return a1, a2, a3, a4
 
 
 # ============================== Exécution ==============================
 
-coup = 1000
+coup = 100
+nbPartie = 10
 
-play(coup)
+tmpMoyen = []
+
+for i in range(nbPartie):
+    startTime = time.time()
+    a1, a2, a3, a4 = play(coup)
+    tmpMoyen.append(time.time() - startTime)
+    print(f"Temps pour la partie n°{i} : {tmpMoyen[i]} secondes")
+    if nbPartie > 1 : # si on a une seule partie alors on ne fait pas la moyenne, on garde les résultats brut
+        a1Moyenne.append(sum(a1) / len(a1))
+        a2Moyenne.append(sum(a2) / len(a2))
+        a3Moyenne.append(sum(a3) / len(a3))
+        a4Moyenne.append(sum(a4) / len(a4))
+    else:
+        a1Moyenne = a1
+        a2Moyenne = a2
+        a3Moyenne = a3
+        a4Moyenne = a4
+
+print(f"Temps moyen pour les {nbPartie} parties : {sum(tmpMoyen) / len(tmpMoyen)} secondes")
 
 fig, ax = plt.subplots(figsize=(10, 6))
 
-ax.plot(range(len(a1)), a1, marker='o', label='Approche 1')
-ax.plot(range(len(a2)), a2, marker='s', label='Approche 2')
-ax.plot(range(len(a3)), a3, marker='^', label='Approche 3')
-ax.plot(range(len(a4)), a4, marker='D', label='Approche 4')
+ax.plot(range(len(a1Moyenne)), a1Moyenne, marker='o', label='Approche 1')
+ax.plot(range(len(a2Moyenne)), a2Moyenne, marker='s', label='Approche 2')
+ax.plot(range(len(a3Moyenne)), a3Moyenne, marker='^', label='Approche 3')
+ax.plot(range(len(a4Moyenne)), a4Moyenne, marker='D', label='Approche 4')
 
 ax.set_xlabel('Nombre de coup jouer')
 ax.set_ylabel('Temps d\'exécution (ms)')
 ax.set_title('Temps d\'exécution d\'un coup en fonction du nombre de coup jouer')
 ax.legend()
 ax.grid(True, linestyle='--', alpha=0.5)
+ax.set_yscale('log')
 
 plt.show()

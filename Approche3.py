@@ -102,19 +102,13 @@ class Jeu:
         print(f"Pas de gagnant après {coups} coups")
 
     def jouerCoup(self, joueur, p):
-        # Assignation d'une dispersion pour le coup du joueur1
-        self.valeurDispersion(p)
-
-        # Vérification position jouable pour joueur1   
-        pos = self.zoneJouable(self.joueur1)
-
-        if pos is None:
-            return None # Plus de case dispo
+        # Assignation d'une dispersion pour le coup du joueur
+        self.dispersion = p
         
         # Assignations des valeurs retournées par zoneJouable
-        x, y = pos 
+        x, y = self.zoneJouable(joueur) 
 
-        # Joueur1 joue
+        # Joueur joue
         self.plateau.setCase(x, y, joueur)
 
         # Vérificaton de la victoire après coup

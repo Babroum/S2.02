@@ -22,6 +22,11 @@ class Plateau:
         """
         this.taille = (9, 9) 
         this.plateau = np.zeros(this.taille, dtype=int)
+
+        # les 2 variables vont accumuler tous les décalages du plateau
+        this.décalageX = 0
+        this.décalageY = 0
+
         # couleur pour l'affichage matplot (blanc = vide, bleu/rouge = pions)
         this.couleur = mcolors.ListedColormap(['white', 'blue', 'red'])
 
@@ -41,9 +46,12 @@ class Plateau:
 
         # si inférieures alors on doit agrandir et décaller tout le jeu puis mettre le pion qui était en négatif en 0
         if (x < 0):
+            # on affecte le décalage
+            this.décalageX += abs(x)
             this.setTaille(this.taille[0] + abs(x), this.taille[1], True)
             x = 0
         if (y < 0):
+            this.décalageY += abs(y)
             this.setTaille(this.taille[0], this.taille[1] + abs(y), True)
             y = 0
 
@@ -114,6 +122,11 @@ class Jeu:
 
         this.joueur1 = TypeCase.ROND
         this.joueur2 = TypeCase.CROIX
+
+        this.xmin = 0
+        this.xmax = 0 
+        this.ymin = 0
+        this.ymax = 0    
 
         # le premier pion est en 0, 0
         this.plateau.setCase(int(this.plateau.taille[0] / 2), int(this.plateau.taille[1] / 2), this.joueur1.value)
@@ -197,37 +210,28 @@ class Jeu:
 
     def zoneJouable(this) -> tuple:
         """<b>Calcule la nouvelle position jouable pour un pion</b> \n
-        La méthode récupère une position (x, y) aléatoire autour de chaque pion d'une distance de maxStep en +/- \n
-        Sur le plateau et l'ajoute dans une liste, et sélectionne après parmi cette liste une position aléatoire jouable\n
-        que le prochain pion va recevoir
+        Le but est de prendre le pion en x,y le plus éloigné en négatif et le pions en x,y le plus éloigné en positif \n
+        Pour après appliquer le pas autour de cette zone de jeu (carré formé pas les 2 pions les plus éloignés)
 
         Returns:
             tuple: retourne les coordonnées x et y de la position à jouer
         """
-        positionJouable = []
-        # parcours le plateau 
-        for y in range(this.plateau.taille[1]):
-            for x in range(this.plateau.taille[0]):
-                # si il y a une case qui comporte un pion
-                if this.plateau.getCase(x, y) in (TypeCase.CROIX.value, TypeCase.ROND.value):
-                    # on selection aléatoirement une case jouable autour du pion 
-                    # par exemple pour 10 pions sur le plateau il y aura 10 positions jouables pour le prochain pion
-                    casesLibres = []
-                   
-                    # pour chaque case jouable autour de la case x, y
-                    for ty in range(y - this.maxStep, y + this.maxStep + 1):
-                        for tx in range(x - this.maxStep, x + this.maxStep + 1):
-                            # getcase va récupérer la case et si elle n'existe pas alors il va agrandir le plateau en conséquence
-                            if this.plateau.getCase(tx, ty) == TypeCase.VIDE.value:                                
-                                casesLibres.append((tx, ty))
-                    
-                    # cette valeur est stockée dans la liste de positionJouable
-                    if len(casesLibres) > 0:
-                        positionJouable.append(random.choice(casesLibres))
-        
-        
-        # retourne une position jouable pour le prochain pion depuis la liste de positions jouables
-        return (random.choice(positionJouable))
+        xmin = this.xmin - this.maxStep 
+        xmax = this.xmax + this.maxStep
+        ymin = this.ymin - this.maxStep
+        ymax = this.ymax + this.maxStep
+
+        while True:
+            # position aléatoire dans la zone de jeu
+            x = random.randint(xmin, xmax)
+            y = random.randint(ymin, ymax)
+
+            # x/y peuvent être négatives donc on applique le décallage du tableau 
+            # par exemple un pion est joué en -3, il y a donc 3 en décallage de tableau et le pion est placé en 0 pour numpy (mais la position réelle est -3)
+            nx = x + this.plateau.décalageX
+            ny = y + this.plateau.décalageY
+            if this.plateau.getCase(nx, ny) == TypeCase.VIDE.value:
+                return (x, y)
 
     def jouerCoup(this, joueur : TypeCase, afficher : bool, p : int = 1) -> float:
         """<b>Joue un coup</b>
@@ -245,7 +249,13 @@ class Jeu:
 
         # la vérification de la case n'est pas vide est faite dans la méthode zoneJouable
         x, y = this.zoneJouable()
-        this.plateau.setCase(x, y,joueur.value)
+        this.plateau.setCase(x + this.plateau.décalageX, y + this.plateau.décalageY, joueur.value)
+
+        # on récupère les positions les plus éloignés si il y en a une nouvelle
+        this.xmin = min(this.xmin, x)
+        this.xmax = max(this.xmax, x)
+        this.ymin = min(this.ymin, y)
+        this.ymax = max(this.ymax, y)
 
         # affiche le jeu
         if (afficher):
@@ -259,5 +269,5 @@ class Jeu:
         
     
 if __name__ == "__main__":
-    jeu = Jeu()
+    jeu = Jeu(5)
     jeu.run()
