@@ -44,7 +44,7 @@ def play(coup):
     App4 = A4.Jeu(gomoku)
 
     # variables booléens de victoire
-    app1Win = True
+    app1Win = False
     app2Win = False
     app3Win = False
     app4Win = False   
@@ -65,7 +65,7 @@ def play(coup):
             win = App1.placer(x, y)             
             if win:
                 app1Win = True
-                print(f"app1 gagne au coup nb : {coup}")
+                print(f"app1 gagne au coup nb : {cpt}")
             else:
                 a1.append((time.time() - startTime) * 1000)
 
@@ -75,7 +75,7 @@ def play(coup):
             win = App1.placer(x, y)             
             if win:
                 app1Win = True
-                print(f"app1 gagne au coup nb : {coup}")
+                print(f"app1 gagne au coup nb : {cpt + 1}")
             else:
                 a1.append((time.time() - startTime) * 1000)
         
@@ -86,7 +86,7 @@ def play(coup):
             # le joueur a gagné (-1 si gagnant, sinon le temps d'un coup est retourné)
             if j1 == -1:
                 app2Win = True
-                print(f"app2 gagne au coup nb : {coup}")
+                print(f"app2 gagne au coup nb : {cpt}")
             else:
                 a2.append(j1)
 
@@ -94,7 +94,7 @@ def play(coup):
             j2 = App2.jouerCoup(App2.joueur2, False, p2)
             if j2 == -1:
                 app2Win = True
-                print(f"app2 gagne au coup nb : {coup}")
+                print(f"app2 gagne au coup nb : {cpt + 1}")
             else:
                 a2.append(j2)
 
@@ -105,7 +105,7 @@ def play(coup):
             j1 = App3.jouerCoup(App3.joueur1, p1)
             if j1:
                 app3Win = True
-                print(f"app3 gagne au coup nb : {coup}")
+                print(f"app3 gagne au coup nb : {cpt}")
             else:
                 a3.append((time.time() - startTime) * 1000)
 
@@ -114,7 +114,7 @@ def play(coup):
             j2 = App3.jouerCoup(App3.joueur2, p2)
             if j2:
                 app3Win = True
-                print(f"app3 gagne au coup nb : {coup}")
+                print(f"app3 gagne au coup nb : {cpt + 1}")
             else:
                 a3.append((time.time() - startTime) * 1000)
 
@@ -124,7 +124,7 @@ def play(coup):
             j1 = App4.jouerCoup(App4.joueur1, p1)
             if j1 == -1:
                 app4Win = True
-                print(f"app4 gagne au coup nb : {coup}")
+                print(f"app4 gagne au coup nb : {cpt}")
             else:
                 a4.append(j1)
 
@@ -132,7 +132,7 @@ def play(coup):
             j2 = App4.jouerCoup(App4.joueur2, p2)
             if j2 == -1:
                 app4Win = True
-                print(f"app4 gagne au coup nb : {coup}")
+                print(f"app4 gagne au coup nb : {cpt + 1}")
             else:
                 a4.append(j2)
 
@@ -141,7 +141,7 @@ def play(coup):
 
 # ============================== Exécution ==============================
 
-coup = 100
+coup = 1000
 
 play(coup)
 
