@@ -13,7 +13,6 @@ class TypeCase(Enum):
     VIDE = 0
     CROIX = 1
     ROND = 2
-    TEST = 3
 
 # Un plateau
 class Plateau:
@@ -26,13 +25,13 @@ class Plateau:
         # couleur pour l'affichage matplot (blanc = vide, bleu/rouge = pions)
         this.couleur = mcolors.ListedColormap(['white', 'blue', 'red'])
 
-    def setCase(this, x, y, type):
+    def setCase(this, x : int, y : int, type : int):
         """<b>Modifie une case</b>\n
         Et agrandit le plateau si la case est en dehors
         Args:
-            x (_int_): coordonnée en x
-            y (_int_): coordonnée en y
-            type (_int_): type de la nouvelle case
+            x (int): coordonnée en x
+            y (int): coordonnée en y
+            type (int): type de la nouvelle case
         """       
         # si coordonnées supérieures à la taille du plateau
         if (x > this.taille[0] - 1):
@@ -50,14 +49,14 @@ class Plateau:
 
         this.plateau[x, y] = type
 
-    def getCase(this, x, y):
+    def getCase(this, x : int, y : int) -> int:
         """<b>Renvoie une case</b>
         Args:
-            x (_int_): coordonnée en x
-            y (_int_): coordonnée en y
+            x (int): coordonnée en x
+            y (int): coordonnée en y
 
         Returns:
-            _int_: valeur du type de la case
+            int: valeur du type de la case
         """
         # si case en dehors du plateau alors la case est vide
         if x < 0 or y < 0 or x >= this.taille[0] or y >= this.taille[1]:
@@ -65,12 +64,12 @@ class Plateau:
         
         return this.plateau[x, y]
         
-    def setTaille(this, tailleX, tailleY, faireDécallage):
+    def setTaille(this, tailleX : int, tailleY : int, faireDécallage : bool):
         """<b>Redimensionne le plateau</b>
         Args:
-            tailleX (_int_): nouvelle taille du plateau en X
-            tailleY (_int_): nouvelle taille du plateau en Y
-            faireDécallage (_bool_): Les valeurs doivent elles être décalées
+            tailleX (int): nouvelle taille du plateau en X
+            tailleY (int): nouvelle taille du plateau en Y
+            faireDécallage (bool): Les valeurs doivent elles être décalées
         """
         # nouveau plateau remplit 0
         nvlPlateau = np.zeros((tailleX, tailleY), dtype=int)
@@ -89,11 +88,11 @@ class Plateau:
         # décale toutes les cases
         this.décalerPlateau(tailleX - oldTaille[0], tailleY - oldTaille[1])
 
-    def décalerPlateau(this, stepX, stepY):
+    def décalerPlateau(this, stepX : int, stepY : int):
         """<b>décale les valeurs du plateau grâce à un pas<b>
         Args:
-            stepX (_int_): taille du pas en X
-            stepY (_int_): taille du pas en Y
+            stepX (int): taille du pas en X
+            stepY (int): taille du pas en Y
         """
         # on commence à la fin du plateau vu que l'on doit décaler chaque pion de gauche vers droite / haut vers bas 
         for y in range(this.taille[1] - stepY - 1, -1, -1):
@@ -104,25 +103,24 @@ class Plateau:
                 this.plateau[x, y] = TypeCase.VIDE.value
 
 class Jeu:
-    def __init__(this, n):
+    def __init__(this, n : int):
         """<b>Constructeur<b>\n
         Initialise le plateau et les 2 joueurs
 
         Args:
-            n (_int_): n symboles à aligné pour gagner
+            n (int): n symboles à aligné pour gagner
         """
         this.plateau = Plateau()
 
         this.joueur1 = TypeCase.ROND
         this.joueur2 = TypeCase.CROIX
 
-        #le premier pion est en 0, 0
+        # le premier pion est en 0, 0
         this.plateau.setCase(int(this.plateau.taille[0] / 2), int(this.plateau.taille[1] / 2), this.joueur1.value)
 
         # distance maximale auquel le joueur peut jouer autour de chaque pion
         this.maxStep = 0
 
-        # définis à la 
         this.gomoku = n
 
     def afficherMatPlot(this):
@@ -147,11 +145,11 @@ class Jeu:
         plt.imshow(this.plateau.plateau, cmap=this.plateau.couleur)
         plt.show()
 
-    def victoire(this):
-        """_Détermine si un joueur a gagné_
+    def victoire(this) -> bool:
+        """Détermine si un joueur a gagné
 
         Returns:
-            _bool_: renvoie vrai si un joueur a gagné
+            bool: renvoie vrai si un joueur a gagné
         """
         for y in range(this.plateau.taille[1]):
             for x in range(this.plateau.taille[0]):
@@ -168,43 +166,43 @@ class Jeu:
                 while typeCase == this.plateau.getCase(cpt + x, y):
                     cpt += 1
                     if cpt == this.gomoku:                        
-                        #print(f"{joueur.name}({joueur.value}) à gagné")
+                        #print(f"{joueur.name}({joueur.value}) a gagné")
                         return True
 
                 # verticale
-                cpt = 0
+                cpt = 1
                 while typeCase == this.plateau.getCase(x, cpt + y):
                     cpt += 1      
                     if cpt == this.gomoku:
-                        #print(f"{joueur.name}({joueur.value}) à gagné")
+                        #print(f"{joueur.name}({joueur.value}) a gagné")
                         return True
                     
                 # diagonale bas droite
-                cpt = 0
+                cpt = 1
                 while typeCase == this.plateau.getCase(cpt + x, cpt + y):
                     cpt += 1      
                     if cpt == this.gomoku:
-                        #print(f"{joueur.name}({joueur.value}) à gagné")
+                        #print(f"{joueur.name}({joueur.value}) a gagné")
                         return True
                     
                 # diagonale haut droite
-                cpt = 0
+                cpt = 1
                 while typeCase == this.plateau.getCase(cpt + x, y - cpt):
                     cpt += 1      
                     if cpt == this.gomoku:
-                        #print(f"{joueur.name}({joueur.value}) à gagné")
+                        #print(f"{joueur.name}({joueur.value}) a gagné")
                         return True
                     
         return False
 
-    def zoneJouable(this):
+    def zoneJouable(this) -> tuple:
         """<b>Calcule la nouvelle position jouable pour un pion</b> \n
         La méthode récupère une position (x, y) aléatoire autour de chaque pion d'une distance de maxStep en +/- \n
         Sur le plateau et l'ajoute dans une liste, et sélectionne après parmi cette liste une position aléatoire jouable\n
         que le prochain pion va recevoir
 
         Returns:
-            _tuple_: retourne les coordonnées x et y de la position à jouer
+            tuple: retourne les coordonnées x et y de la position à jouer
         """
         positionJouable = []
         # parcours le plateau 
@@ -231,22 +229,19 @@ class Jeu:
         # retourne une position jouable pour le prochain pion depuis la liste de positions jouables
         return (random.choice(positionJouable))
 
-    def jouerCoup(this, joueur, afficher, p=None):
+    def jouerCoup(this, joueur : TypeCase, afficher : bool, p : int = 1) -> float:
         """<b>Joue un coup</b>
         Args:
-            joueur (_TypeCase_): le joueur qui effectue le coup
-            afficher (_bool_): s'il y a un affichage ou non
-            p (_int_): paramètre de dispersion
+            joueur (TypeCase): le joueur qui effectue le coup
+            afficher (bool): s'il y a un affichage ou non
+            p (int): paramètre de dispersion
         
         Returns:
-            _float_: Temps d'exécution pour jouer un coup, ou -1 si le joueur a gagné
+            float: Temps d'exécution pour jouer un coup, ou -1 si le joueur a gagné
         """
         startTime = time.time()  
 
-        if p == None :
-            this.maxStep = 1
-        else:
-            this.maxStep = p
+        this.maxStep = p
 
         # la vérification de la case n'est pas vide est faite dans la méthode zoneJouable
         x, y = this.zoneJouable()
