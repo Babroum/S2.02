@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 
 # Approche 1
 # Fait par amadeus
-
 DIRECTIONS = [(1, 0), (0, 1), (1, 1), (1, -1)]  # H, B, ↗, ↘
 
 class App1_def :
@@ -65,7 +64,7 @@ class App1_def :
             #combien de pions conséc du joueur sur trouve dans la direction lu
             total = (1 + self.Addition_pion(x, y, dx, dy, pos_joueur) #sens normal (le 1 pour le pions qui vient d'etre poser en (x,y))
                        + self.Addition_pion(x, y, -dx, -dy, pos_joueur)) #sens opposé    
-            if total >= 5:
+            if total >= self.n:
                 return True
         return False
 
@@ -122,12 +121,14 @@ def simulation (p=0.0, max_moves=500):
     winner = 0 si match nul (limite de coups atteinte).
     Utiliser pour tester le code
     """
-    game = App1_def() #crée une nouvelle partie vide
+    move_num = 0
+    game = App1_def(5) #crée une nouvelle partie vide
     start = time.perf_counter() # démarre un chrono pour voir le temps qu'a duré la partie
 
     while True : #compteur de coups
         x, y = bot_mv(game, p) #bot choisi une case selon le paramètre p
         win = game.placer(x, y) #bot place un pion et renvoie True si victoire
+        move_num +=1 
         if win:
             winner = 1 if game.current_player == 2 else 2 #Si victoire (if win) : Comme placer switche le joueur après avoir joué, current_player pointe déjà sur le joueur suivant.
             #                                             Donc si current_player == 2, c'est que le joueur 1 vient de gagner, et inversement.
