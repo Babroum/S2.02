@@ -69,7 +69,7 @@ class App1_def :
                 return True
         return False
 
-    def get_all_position (self) : 
+    def recup_positions (self) : 
         """renvoie toute les positions des joueurs
         """
         return [(mx, my) for mx, my, _ in self.board]
@@ -79,22 +79,12 @@ class App1_def :
         self.board = []
         self.current_player = 1
 #=====BOT=====
-
-def dispersion_radius(p): # p rayon
-    """
-    p se rapproche de 1, plus (1 - p) petit, plus 1 / (1 - p) explose. Le min(..., 1000) empêche le rayon de dépasser 1000,
-    correspond à [xmin - 1000, xmax + 1000].
-    """
-    if p >= 1.0: #car 1/0 impossible
-        return 1000
-    return min(1.0 / (1.0 - p), 1000) #formule sur le projet f(p) = 1 / (1 - p)
-
-def bot_mv(game,p):
+def bot_mv(game, radius):
     """
     Choisit un coup aléatoire selon le paramètre de dispersion p.
     """
     # Récupère les cases déjà jouées (des deux joueurs)
-    positions = game.get_all_position()
+    positions = game.recup_positions()
  
     # Premier coup
     if not positions:
@@ -105,13 +95,11 @@ def bot_mv(game,p):
     ys = [pos[1] for pos in positions]
     xmin, xmax = min(xs), max(xs)
     ymin, ymax = min(ys), max(ys)
- 
-    # Calcule le rayon de dispersion selon p : p grand, zone large
-    radius = dispersion_radius(p)
+
  
     # On tente jusqu'à trouver une case libre au hasard
     while True:
-        if p == 0:
+        if radius == 0:
             # p = 0 : adjacence stricte
             # On choisit un pion déjà posé au hasard, puis un de ses 8 voisins
             ref = random.choice(positions)
@@ -128,7 +116,7 @@ def bot_mv(game,p):
         if game.vide(nx, ny):
             return nx, ny
 
-def simulate_game(p=0.0, max_moves=500):
+def simulation (p=0.0, max_moves=500):
     """
     Simule une partie entre deux bots.
     winner = 0 si match nul (limite de coups atteinte).
